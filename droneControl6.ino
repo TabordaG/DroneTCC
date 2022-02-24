@@ -80,28 +80,28 @@ Fuzzy *fuzzy = new Fuzzy();
 // FuzzyInput pitch
 //FuzzySet *erro_negativo_grande_pitch = new FuzzySet(-40, -40, -25, -12);
 FuzzySet *erro_negativo_medio_pitch = new FuzzySet(-25, -25, -25, -8);
-FuzzySet *erro_negativo_pequeno_pitch = new FuzzySet(-12, -8, -8, 3);
+FuzzySet *erro_negativo_pequeno_pitch = new FuzzySet(-12, -5, -5, 0);
 FuzzySet *erro_nulo_pitch = new FuzzySet(-5, 0, 0, 5);
-FuzzySet *erro_positivo_pequeno_pitch = new FuzzySet(3, 8, 8, 12);
+FuzzySet *erro_positivo_pequeno_pitch = new FuzzySet(0, 5, 5, 12);
 FuzzySet *erro_positivo_medio_pitch = new FuzzySet(8, 25, 25, 25);
 //FuzzySet *erro_positivo_grande_pitch = new FuzzySet(12, 25, 40, 40);
 
 // FuzzyInput derivada pitch
 //FuzzySet *erro_negativo_grande_derivada_pitch = new FuzzySet(-2.5, -2.5, -1.6, -1.2);
-FuzzySet *erro_negativo_medio_derivada_pitch = new FuzzySet(-3.5, -3.5, -1.8, -1.2);
-FuzzySet *erro_negativo_pequeno_derivada_pitch = new FuzzySet(-1.8, -1.2, -1.2, 0);
+FuzzySet *erro_negativo_medio_derivada_pitch = new FuzzySet(-6.0, -6.0, -6.0, -2.0);
+FuzzySet *erro_negativo_pequeno_derivada_pitch = new FuzzySet(-6.0, -2.0, -2.0, 0);
 FuzzySet *erro_nulo_derivada_pitch = new FuzzySet(-0.8, 0, 0, 0.8);
-FuzzySet *erro_positivo_pequeno_derivada_pitch = new FuzzySet(0, 1.2, 1.2, 1.8);
-FuzzySet *erro_positivo_medio_derivada_pitch = new FuzzySet(1.2, 1.8, 3.5, 3.5);
+FuzzySet *erro_positivo_pequeno_derivada_pitch = new FuzzySet(0, 2.0, 2.0, 6.0);
+FuzzySet *erro_positivo_medio_derivada_pitch = new FuzzySet(2.0, 6.0, 6.0, 6.0);
 //FuzzySet *erro_positivo_grande_derivada_pitch = new FuzzySet(1.2, 1.6, 2.5, 2.5);
 
 // FuzzyOutput pitch
 //FuzzySet *incremento_negativo_grande_pitch = new FuzzySet(-3, -3, -2, -1);
-FuzzySet *incremento_negativo_medio_pitch = new FuzzySet(-3, -3, -2, -1);
-FuzzySet *incremento_negativo_pequeno_pitch = new FuzzySet(-1.5, -1, -1, 0);
+FuzzySet *incremento_negativo_medio_pitch = new FuzzySet(-0.5, -0.5, -0.5, -0.3);
+FuzzySet *incremento_negativo_pequeno_pitch = new FuzzySet(-0.5, -0.3, -0.3, 0);
 FuzzySet *incremento_nulo_pitch = new FuzzySet(0, 0, 0, 0);
-FuzzySet *incremento_positivo_pequeno_pitch = new FuzzySet(0, 1, 1, 1.5);
-FuzzySet *incremento_positivo_medio_pitch = new FuzzySet(1, 2, 3, 3);
+FuzzySet *incremento_positivo_pequeno_pitch = new FuzzySet(0, 0.3, 0.3, 0.5);
+FuzzySet *incremento_positivo_medio_pitch = new FuzzySet(0.3, 0.5, 0.5, 0.5);
 //FuzzySet *incremento_positivo_grande_pitch = new FuzzySet(1, 2, 3, 3);
 
 // ----------------
