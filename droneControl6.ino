@@ -990,6 +990,7 @@ void abortarVoo() {
 }
 
 void controlaVoo() {
+  unsigned long initMillis = millis(); //VARIÁVEL RECEBE O TEMPO ATUAL EM MILISSEGUNDOS
   int16_t AcX,AcY,AcZ,Tmp,GyX,GyY,GyZ;
 
   double x;
@@ -999,6 +1000,10 @@ void controlaVoo() {
   double angleX = 0.0;
   double angleY = 0.0;
   double angleZ = 0.0;
+
+  double C_angleX = 0.0;
+  double C_angleY = 0.0;
+  double C_angleZ = 0.0;
 
   double preAngle[3] = {0.0, 0.0, 0.0};
   
@@ -1025,9 +1030,9 @@ void controlaVoo() {
   int i = 0;
   
   while(i < 2) {
-    int count = 0, num = 35;
+    int count = 0, num = 35, critico = 0;
     
-    while(count < num) {
+    while(count < num && critico < num) {
       Wire.beginTransmission(MPU_addr);
       Wire.write(0x3B);
       Wire.endTransmission(false);
@@ -1046,114 +1051,129 @@ void controlaVoo() {
       if(x > 180) x = x - 360;
       if(y > 180) y = y - 360;
       if(z > 180) z = z - 360;
-  
-      angleX = angleX + x;
-      angleY = angleY + y;
-      angleZ = angleZ + z;
-      
-      count++;
+
+      if(abs(x) >= criticalAngle || abs(y) >= criticalAngle) {
+        C_angleX = C_angleX + x;
+        C_angleY = C_angleY + y;
+        C_angleZ = C_angleZ + z;
+        
+        critico++;
+      } else {
+        angleX = angleX + x;
+        angleY = angleY + y;
+        angleZ = angleZ + z;
+
+        count++;
+      }
     }
-  
-    angleX = (angleX / count);
-    angleY = (angleY / count) - 2;
-    angleZ = (angleZ / count);
-    count = 0;
-  
-    if(i == 0) {
-      preAngle[0] = angleX * 1.0;
-      preAngle[1] = angleY * 1.0;
-      preAngle[2] = angleZ * 1.0;
+
+    if(count == num) {
+      angleX = (angleX / count);
+      angleY = (angleY / count) - 2;
+      angleZ = (angleZ / count);
+      count = 0;
+    
+      if(i == 0) {
+        preAngle[0] = angleX * 1.0;
+        preAngle[1] = angleY * 1.0;
+        preAngle[2] = angleZ * 1.0;
+      }
+    } else {
+      C_angleX = (C_angleX / critico);
+      C_angleY = (C_angleY / critico) - 2;
+      C_angleZ = (C_angleZ / critico);
+      count = 0;
+    
+      if(i == 0) {
+        preAngle[0] = C_angleX * 1.0;
+        preAngle[1] = C_angleY * 1.0;
+        preAngle[2] = C_angleZ * 1.0;
+      }
     }
     
     delay(20);
     i++;
   }
-  
-  dAngleX = angleX - preAngle[0];
-  dAngleY = angleY - preAngle[1];
-  dAngleZ = angleZ - preAngle[2];
 
-  preAngle[0] = angleX;
-  preAngle[1] = angleY;
-  preAngle[2] = angleZ;
-
-  Serial.println("");
-  Serial.println("----------------------------------");
-  Serial.println("");
-  Serial.print("AngX = ");
-  Serial.print(angleX);
-  Serial.print("  /  Derivada = ");
-  Serial.println(dAngleX);
-  Serial.print("AngY = ");
-  Serial.print(angleY);
-  Serial.print("  /  Derivada = ");
-  Serial.println(dAngleY);
-  
-  //INICIO DO CONTROLE DO LED AMARELO
-//  unsigned long initMillis = millis(); //VARIÁVEL RECEBE O TEMPO ATUAL EM MILISSEGUNDOS
-
-  fuzzy->setInput(1, (1) * angleY);
-  fuzzy->setInput(2, (1) * dAngleY);
-//  fuzzy->setInput(3, (-1) * angleX);
-//  fuzzy->setInput(4, (-1) * dAngleX);
-  fuzzy->fuzzify();
-  
-  resPitch = gainMotor * fuzzy->defuzzify(1);
-//  resRoll = gainMotor * fuzzy->defuzzify(2);
-
-  resM1 = 0.0;
-  resM2 = 0.0;
-  resM3 = 0.0;
-  resM4 = 0.0;
+  if(critico == num) {
     
-  if(resPitch < 0) {
-    resM1 = (-1) * resPitch;
-    resM3 = (-1) * resPitch;
-  } else {
-    resM2 = resPitch;
-    resM4 = resPitch;
-  }
+    dAngleX = C_angleX - preAngle[0];
+    dAngleY = C_angleY - preAngle[1];
+    dAngleZ = C_angleZ - preAngle[2];
+  
+    preAngle[0] = C_angleX;
+    preAngle[1] = C_angleY;
+    preAngle[2] = C_angleZ;
 
-  if(abs(angleY) < 3) {
+    filtroSeguranca(C_angleX, C_angleY, C_angleZ);
+
+    unsigned long finalMillis = millis() - initMillis;
+    // Txt para CSV
+    Serial.println(String(angleY) + "," + String(dAngleY) + "," + String(resPitch) + "," + String(resM1) + "," + String(resM2) + "," + String(resM3) + "," + String(resM4) + "," + String(motor1Fuzzy) + "," + String(motor2Fuzzy) + "," + String(motor3Fuzzy) + "," + String(motor4Fuzzy) + "," + String(finalMillis));
+
+  } else {
+    
+    dAngleX = angleX - preAngle[0];
+    dAngleY = angleY - preAngle[1];
+    dAngleZ = angleZ - preAngle[2];
+  
+    preAngle[0] = angleX;
+    preAngle[1] = angleY;
+    preAngle[2] = angleZ;
+  
     resM1 = 0.0;
     resM2 = 0.0;
     resM3 = 0.0;
     resM4 = 0.0;
+    if(abs(angleY) <= 25 && abs(dAngleY) <= 6) {
+      fuzzy->setInput(1, (1) * angleY);
+      fuzzy->setInput(2, (1) * dAngleY);
+      // fuzzy->setInput(3, (-1) * angleX);
+      // fuzzy->setInput(4, (-1) * dAngleX);
+      fuzzy->fuzzify();
+
+      resPitch = gainMotor * fuzzy->defuzzify(1);
+      // resRoll = gainMotor * fuzzy->defuzzify(2);
+
+      if(resPitch < 0) {
+       resM1 = (-1) * resPitch;
+       resM3 = (-1) * resPitch;
+      } else {
+       resM2 = resPitch;
+       resM4 = resPitch;
+      }
+
+      motor1Fuzzy += resM1;
+      motor2Fuzzy += resM2;
+      motor3Fuzzy += resM3;
+      motor4Fuzzy += resM4;
+    }
+  
+    // unsigned long fuzzyTime = millis() - initMillis;
+    
+    filtroSeguranca(angleX, angleY, angleZ);
+    // gravarDados(fuzzyTime);
+  
+    unsigned long finalMillis = millis() - initMillis;
+    // Txt para CSV
+    Serial.println(String(angleY) + "," + String(dAngleY) + "," + String(resPitch) + "," + String(resM1) + "," + String(resM2) + "," + String(resM3) + "," + String(resM4) + "," + String(motor1Fuzzy) + "," + String(motor2Fuzzy) + "," + String(motor3Fuzzy) + "," + String(motor4Fuzzy) + "," + String(finalMillis));
+  
+    if(!abortarMissao) {
+        // Ajusta os motores
+        motor1DC.writeMicroseconds(base + motor1Fuzzy);
+        motor2DC.writeMicroseconds(base + motor2Fuzzy);
+        motor3DC.writeMicroseconds(base + motor3Fuzzy);
+        motor4DC.writeMicroseconds(base + motor4Fuzzy);
+        motorLigado = true;   
+    } else {
+      // Ajusta os motores
+      motor1DC.writeMicroseconds(MIN_SIGNAL);
+      motor2DC.writeMicroseconds(MIN_SIGNAL);
+      motor3DC.writeMicroseconds(MIN_SIGNAL);
+      motor4DC.writeMicroseconds(MIN_SIGNAL);
+      motorLigado = false;
+    }
   }
-  
-  motor1Fuzzy += resM1;
-  motor2Fuzzy += resM2;
-  motor3Fuzzy += resM3;
-  motor4Fuzzy += resM4;
-
-//  unsigned long fuzzyTime = millis() - initMillis;
-  
-  filtroSeguranca(angleX, angleY, angleZ);
-//  gravarDados(fuzzyTime);
-
-//  Serial.println("resPitch: " + String(resPitch));
-//  Serial.println("M1: " + String(resM1) + "  M2: " + String(resM2) + "  M3: " + String(resM3) + "  M4: " + String(resM4));
-//  Serial.println("Base: " + String(base) + "     Motor 1: " + String(motor1Fuzzy) + "    Motor 2: " + String(motor2Fuzzy) + "    Motor 3: " + String(motor3Fuzzy) + "    Motor 4: " + String(motor4Fuzzy)); 
-
-  // Txt para CSV
-  Serial.println(String(angleY) + "," + String(dAngleY) + "," + String(resPitch) + "," + String(resM1) + "," + String(resM2) + "," + String(resM3) + "," + String(resM4) + "," + String(motor1Fuzzy) + "," + String(motor2Fuzzy) + "," + String(motor3Fuzzy) + "," + String(motor4Fuzzy));
-  
-  if(!abortarMissao) {
-    // Ajusta os motores
-    motor1DC.writeMicroseconds(base + motor1Fuzzy);
-    motor2DC.writeMicroseconds(base + motor2Fuzzy);
-    motor3DC.writeMicroseconds(base + motor3Fuzzy);
-    motor4DC.writeMicroseconds(base + motor4Fuzzy);
-    motorLigado = true;
-  } else {
-    // Ajusta os motores
-    motor1DC.writeMicroseconds(MIN_SIGNAL);
-    motor2DC.writeMicroseconds(MIN_SIGNAL);
-    motor3DC.writeMicroseconds(MIN_SIGNAL);
-    motor4DC.writeMicroseconds(MIN_SIGNAL);
-    motorLigado = false;
-  }
-  
   delay(20);
 }
 
