@@ -53,7 +53,7 @@ bool testeBase = false;
 
 int limiteBase = 1600;
 double criticalAngle = 40;
-int securityNumber = 2;
+float securityNumber = 0.2;
 int delaySet = 10;
 
 const int MPU_addr=0x68;
@@ -81,7 +81,7 @@ Fuzzy *fuzzy = new Fuzzy();
 //FuzzySet *erro_negativo_grande_pitch = new FuzzySet(-40, -40, -25, -12);
 FuzzySet *erro_negativo_medio_pitch = new FuzzySet(-25, -25, -25, -8);
 FuzzySet *erro_negativo_pequeno_pitch = new FuzzySet(-12, -5, -5, 0);
-FuzzySet *erro_nulo_pitch = new FuzzySet(-5, 0, 0, 5);
+FuzzySet *erro_nulo_pitch = new FuzzySet(-2, 0, 0, 2);
 FuzzySet *erro_positivo_pequeno_pitch = new FuzzySet(0, 5, 5, 12);
 FuzzySet *erro_positivo_medio_pitch = new FuzzySet(8, 25, 25, 25);
 //FuzzySet *erro_positivo_grande_pitch = new FuzzySet(12, 25, 40, 40);
@@ -97,11 +97,11 @@ FuzzySet *erro_positivo_medio_derivada_pitch = new FuzzySet(2.0, 6.0, 6.0, 6.0);
 
 // FuzzyOutput pitch
 //FuzzySet *incremento_negativo_grande_pitch = new FuzzySet(-3, -3, -2, -1);
-FuzzySet *incremento_negativo_medio_pitch = new FuzzySet(-0.5, -0.5, -0.5, -0.3);
-FuzzySet *incremento_negativo_pequeno_pitch = new FuzzySet(-0.5, -0.3, -0.3, 0);
+FuzzySet *incremento_negativo_medio_pitch = new FuzzySet(-1, -1, -1, -0.5);
+FuzzySet *incremento_negativo_pequeno_pitch = new FuzzySet(-1, -0.5, -0.5, 0);
 FuzzySet *incremento_nulo_pitch = new FuzzySet(0, 0, 0, 0);
-FuzzySet *incremento_positivo_pequeno_pitch = new FuzzySet(0, 0.3, 0.3, 0.5);
-FuzzySet *incremento_positivo_medio_pitch = new FuzzySet(0.3, 0.5, 0.5, 0.5);
+FuzzySet *incremento_positivo_pequeno_pitch = new FuzzySet(0, 0.5, 0.5, 1);
+FuzzySet *incremento_positivo_medio_pitch = new FuzzySet(0.5, 1, 1, 1);
 //FuzzySet *incremento_positivo_grande_pitch = new FuzzySet(1, 2, 3, 3);
 
 // ----------------
@@ -1028,9 +1028,10 @@ void controlaVoo() {
   double resM4 = 0.0;
 
   int i = 0;
-  
+  int count = 0, num = 35, critico = 0;
   while(i < 2) {
-    int count = 0, num = 35, critico = 0;
+    count = 0;
+    critico = 0;
     
     while(count < num && critico < num) {
       Wire.beginTransmission(MPU_addr);
@@ -1246,16 +1247,15 @@ void filtroSeguranca(float angleX, float angleY, float angleZ) {
     }
 
     if(motor1Fuzzy > securityNumber && motor2Fuzzy > securityNumber && motor3Fuzzy > securityNumber && motor4Fuzzy > securityNumber) {
-      Serial.println("Reduzindo Valor");
-      motor1Fuzzy -= 2;
-      motor2Fuzzy -= 2;
-      motor3Fuzzy -= 2;
-      motor4Fuzzy -= 2;
+      motor1Fuzzy -= securityNumber;
+      motor2Fuzzy -= securityNumber;
+      motor3Fuzzy -= securityNumber;
+      motor4Fuzzy -= securityNumber;
     }
 
     if(baseRef > 1290) {
-    if(base < baseRef) base += 1;
-    else if(base > baseRef) base -= 1;
+    if(base < baseRef) base += 2;
+    else if(base > baseRef) base -= 2;
     } else base = baseRef;
     
     if(motor1Fuzzy > 30) motor1Fuzzy = 30;
