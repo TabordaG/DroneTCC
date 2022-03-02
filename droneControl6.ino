@@ -19,6 +19,10 @@
 #error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
 #endif
 
+unsigned long initMillis;
+float mediaAngle = 0;
+int countMediaAngle = 0;
+    
 BluetoothSerial SerialBT;
 //File myFile;
 
@@ -930,6 +934,9 @@ void loop() {
         SerialBT.println("Iniciando Controle de Vôo");
         abortarMissao = false;
         testeBase = false;
+        initMillis = millis();
+        mediaAngle = 0;
+        countMediaAngle = 0;
       } else if (valorRecebido.startsWith("A") || valorRecebido.startsWith("a")) {
         alturaRef = valorRecebido.substring(1).toDouble();
         SerialBT.println("Nova Referência de Altura: " + String(alturaRef));
@@ -990,7 +997,6 @@ void abortarVoo() {
 }
 
 void controlaVoo() {
-  unsigned long initMillis = millis(); //VARIÁVEL RECEBE O TEMPO ATUAL EM MILISSEGUNDOS
   int16_t AcX,AcY,AcZ,Tmp,GyX,GyY,GyZ;
 
   double x;
@@ -1108,10 +1114,16 @@ void controlaVoo() {
 
     filtroSeguranca(C_angleX, C_angleY, C_angleZ);
 
+    mediaAngle += angleY;
+    countMediaAngle ++;
+    
     unsigned long finalMillis = millis() - initMillis;
-    // Txt para CSV
-    Serial.println(String(angleY) + "," + String(dAngleY) + "," + String(resPitch) + "," + String(resM1) + "," + String(resM2) + "," + String(resM3) + "," + String(resM4) + "," + String(motor1Fuzzy) + "," + String(motor2Fuzzy) + "," + String(motor3Fuzzy) + "," + String(motor4Fuzzy) + "," + String(finalMillis));
 
+    if(finalMillis >= 1000) {
+      // Txt para CSV
+      Serial.println(String(mediaAngle/countMediaAngle) + "," + String(dAngleY) + "," + String(resPitch) + "," + String(resM1) + "," + String(resM2) + "," + String(resM3) + "," + String(resM4) + "," + String(motor1Fuzzy) + "," + String(motor2Fuzzy) + "," + String(motor3Fuzzy) + "," + String(motor4Fuzzy) + "," + String(finalMillis));
+    }
+    
   } else {
     
     dAngleX = angleX - preAngle[0];
@@ -1155,10 +1167,16 @@ void controlaVoo() {
     filtroSeguranca(angleX, angleY, angleZ);
     // gravarDados(fuzzyTime);
   
+    mediaAngle += angleY;
+    countMediaAngle ++;
+    
     unsigned long finalMillis = millis() - initMillis;
-    // Txt para CSV
-    Serial.println(String(angleY) + "," + String(dAngleY) + "," + String(resPitch) + "," + String(resM1) + "," + String(resM2) + "," + String(resM3) + "," + String(resM4) + "," + String(motor1Fuzzy) + "," + String(motor2Fuzzy) + "," + String(motor3Fuzzy) + "," + String(motor4Fuzzy) + "," + String(finalMillis));
-  
+
+    if(finalMillis >= 1000) {
+      // Txt para CSV
+      Serial.println(String(mediaAngle/countMediaAngle) + "," + String(dAngleY) + "," + String(resPitch) + "," + String(resM1) + "," + String(resM2) + "," + String(resM3) + "," + String(resM4) + "," + String(motor1Fuzzy) + "," + String(motor2Fuzzy) + "," + String(motor3Fuzzy) + "," + String(motor4Fuzzy) + "," + String(finalMillis));
+    }
+    
     if(!abortarMissao) {
         // Ajusta os motores
         motor1DC.writeMicroseconds(base + motor1Fuzzy);
